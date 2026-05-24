@@ -1,5 +1,5 @@
 import { prisma } from "../prisma";
-import { Prisma } from "@prisma/client";
+import { Inventory } from "@prisma/client";
 
 export class ReservationService {
   /**
@@ -12,7 +12,7 @@ export class ReservationService {
   ) {
     return prisma.$transaction(async (tx) => {
       // 1. Lock the inventory row using SELECT FOR UPDATE
-      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
+      const inventories = await tx.$queryRaw<Inventory[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${productId} AND "warehouseId" = ${warehouseId}
         FOR UPDATE
@@ -79,7 +79,7 @@ export class ReservationService {
       }
 
       // 3. Lock corresponding inventory row
-      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
+      const inventories = await tx.$queryRaw<Inventory[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${reservation.productId} AND "warehouseId" = ${reservation.warehouseId}
         FOR UPDATE
@@ -137,7 +137,7 @@ export class ReservationService {
       }
 
       // 3. Lock corresponding inventory row
-      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
+      const inventories = await tx.$queryRaw<Inventory[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${reservation.productId} AND "warehouseId" = ${reservation.warehouseId}
         FOR UPDATE
@@ -196,9 +196,7 @@ export class ReservationService {
           }
 
           // Lock inventory row
-          const inventories = await tx.$queryRaw<
-            Prisma.InventoryGetPayload<{}>[]
-          >`
+          const inventories = await tx.$queryRaw<Inventory[]>`
             SELECT * FROM "Inventory"
             WHERE "productId" = ${res.productId} AND "warehouseId" = ${res.warehouseId}
             FOR UPDATE
