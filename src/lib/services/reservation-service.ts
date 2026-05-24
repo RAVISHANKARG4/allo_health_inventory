@@ -1,20 +1,25 @@
-import { prisma } from '../prisma';
+import { prisma } from "../prisma";
+import { Prisma } from "@prisma/client";
 
 export class ReservationService {
   /**
    * Safe reservation creation under concurrency using row-level locking.
    */
-  static async createReservation(productId: string, warehouseId: string, quantity: number) {
+  static async createReservation(
+    productId: string,
+    warehouseId: string,
+    quantity: number,
+  ) {
     return prisma.$transaction(async (tx) => {
       // 1. Lock the inventory row using SELECT FOR UPDATE
-      const inventories = await tx.$queryRaw<any[]>`
+      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${productId} AND "warehouseId" = ${warehouseId}
         FOR UPDATE
       `;
 
       if (inventories.length === 0) {
-        throw new Error('INVENTORY_NOT_FOUND');
+        throw new Error("INVENTORY_NOT_FOUND");
       }
 
       const inventory = inventories[0];
@@ -22,7 +27,7 @@ export class ReservationService {
 
       // 2. Compute available stock and check if sufficient
       if (available < quantity) {
-        throw new Error('INSUFFICIENT_STOCK');
+        throw new Error("INSUFFICIENT_STOCK");
       }
 
       // 3. Increment reservedUnits in Inventory
@@ -39,7 +44,7 @@ export class ReservationService {
           productId,
           warehouseId,
           quantity,
-          status: 'PENDING',
+          status: "PENDING",
           expiresAt,
         },
       });
@@ -59,29 +64,29 @@ export class ReservationService {
       });
 
       if (!reservation) {
-        throw new Error('RESERVATION_NOT_FOUND');
+        throw new Error("RESERVATION_NOT_FOUND");
       }
 
       // 2. Idempotency checks
-      if (reservation.status === 'CONFIRMED') {
+      if (reservation.status === "CONFIRMED") {
         return reservation;
       }
-      if (reservation.status === 'RELEASED') {
-        throw new Error('RESERVATION_RELEASED');
+      if (reservation.status === "RELEASED") {
+        throw new Error("RESERVATION_RELEASED");
       }
       if (reservation.expiresAt < new Date()) {
-        throw new Error('RESERVATION_EXPIRED');
+        throw new Error("RESERVATION_EXPIRED");
       }
 
       // 3. Lock corresponding inventory row
-      const inventories = await tx.$queryRaw<any[]>`
+      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${reservation.productId} AND "warehouseId" = ${reservation.warehouseId}
         FOR UPDATE
       `;
 
       if (inventories.length === 0) {
-        throw new Error('INVENTORY_NOT_FOUND');
+        throw new Error("INVENTORY_NOT_FOUND");
       }
 
       const inventory = inventories[0];
@@ -99,7 +104,7 @@ export class ReservationService {
       const updatedReservation = await tx.reservation.update({
         where: { id: reservationId },
         data: {
-          status: 'CONFIRMED',
+          status: "CONFIRMED",
           confirmedAt: new Date(),
         },
       });
@@ -120,19 +125,19 @@ export class ReservationService {
       });
 
       if (!reservation) {
-        throw new Error('RESERVATION_NOT_FOUND');
+        throw new Error("RESERVATION_NOT_FOUND");
       }
 
       // 2. Idempotency checks
-      if (reservation.status === 'RELEASED') {
+      if (reservation.status === "RELEASED") {
         return reservation;
       }
-      if (reservation.status === 'CONFIRMED') {
-        throw new Error('RESERVATION_ALREADY_CONFIRMED');
+      if (reservation.status === "CONFIRMED") {
+        throw new Error("RESERVATION_ALREADY_CONFIRMED");
       }
 
       // 3. Lock corresponding inventory row
-      const inventories = await tx.$queryRaw<any[]>`
+      const inventories = await tx.$queryRaw<Prisma.InventoryGetPayload<{}>[]>`
         SELECT * FROM "Inventory"
         WHERE "productId" = ${reservation.productId} AND "warehouseId" = ${reservation.warehouseId}
         FOR UPDATE
@@ -153,7 +158,7 @@ export class ReservationService {
       const updatedReservation = await tx.reservation.update({
         where: { id: reservationId },
         data: {
-          status: 'RELEASED',
+          status: "RELEASED",
           releasedAt: new Date(),
         },
       });
@@ -169,7 +174,7 @@ export class ReservationService {
   static async releaseExpiredReservations() {
     const expiredReservations = await prisma.reservation.findMany({
       where: {
-        status: 'PENDING',
+        status: "PENDING",
         expiresAt: {
           lt: new Date(),
         },
@@ -186,12 +191,14 @@ export class ReservationService {
             where: { id: res.id },
           });
 
-          if (!currentRes || currentRes.status !== 'PENDING') {
+          if (!currentRes || currentRes.status !== "PENDING") {
             return;
           }
 
           // Lock inventory row
-          const inventories = await tx.$queryRaw<any[]>`
+          const inventories = await tx.$queryRaw<
+            Prisma.InventoryGetPayload<{}>[]
+          >`
             SELECT * FROM "Inventory"
             WHERE "productId" = ${res.productId} AND "warehouseId" = ${res.warehouseId}
             FOR UPDATE
@@ -211,7 +218,7 @@ export class ReservationService {
           await tx.reservation.update({
             where: { id: res.id },
             data: {
-              status: 'RELEASED',
+              status: "RELEASED",
               releasedAt: new Date(),
             },
           });

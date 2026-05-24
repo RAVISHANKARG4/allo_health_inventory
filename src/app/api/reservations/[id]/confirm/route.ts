@@ -35,26 +35,26 @@ export async function POST(
     }
 
     return NextResponse.json(successResponse, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error confirming reservation ${id}:`, error);
 
     let status = 500;
     let code = 'SERVER_ERROR';
     let message = 'An unexpected error occurred.';
 
-    if (error.message === 'RESERVATION_EXPIRED') {
+    if (error instanceof Error && error.message === 'RESERVATION_EXPIRED') {
       status = 410;
       code = 'RESERVATION_EXPIRED';
       message = 'This reservation has expired and cannot be confirmed.';
-    } else if (error.message === 'RESERVATION_RELEASED') {
+    } else if (error instanceof Error && error.message === 'RESERVATION_RELEASED') {
       status = 400;
       code = 'RESERVATION_RELEASED';
       message = 'This reservation was already cancelled or released.';
-    } else if (error.message === 'RESERVATION_NOT_FOUND') {
+    } else if (error instanceof Error && error.message === 'RESERVATION_NOT_FOUND') {
       status = 404;
       code = 'RESERVATION_NOT_FOUND';
       message = 'The specified reservation was not found.';
-    } else if (error.message === 'INVENTORY_NOT_FOUND') {
+    } else if (error instanceof Error && error.message === 'INVENTORY_NOT_FOUND') {
       status = 404;
       code = 'INVENTORY_NOT_FOUND';
       message = 'The corresponding inventory record was not found.';

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ToastProvider } from '@/components/ui/toast-provider';
 import { Package2 } from 'lucide-react';
 import './globals.css';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Allo Inventory Reservation System',
@@ -20,14 +21,14 @@ export default function RootLayout({
           {/* Header */}
           <header className="sticky top-0 z-40 w-full border-b border-slate-800/50 bg-slate-950/70 backdrop-blur-md">
             <div className="container mx-auto max-w-7xl flex h-16 items-center justify-between px-4 sm:px-6">
-              <a href="/" className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors">
+              <Link href="/" className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors">
                 <Package2 className="h-6 w-6" />
                 <span className="font-bold text-lg text-slate-100 tracking-tight">Allo Checkout Logistics</span>
-              </a>
+              </Link>
               <nav className="flex items-center gap-4 text-sm font-medium text-slate-400">
-                <a href="/" className="hover:text-slate-100 transition-colors">
+                <Link href="/" className="hover:text-slate-100 transition-colors">
                   Products Catalog
-                </a>
+                </Link>
                 <span className="text-slate-700">|</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/25">
                   Production Mode

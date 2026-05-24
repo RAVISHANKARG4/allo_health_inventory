@@ -3,7 +3,7 @@ import { redis, isRedisEnabled } from '../redis';
 
 interface IdempotencyResponse {
   statusCode: number;
-  responseBody: any;
+  responseBody: unknown;
 }
 
 export class IdempotencyService {
@@ -67,7 +67,7 @@ export class IdempotencyService {
     key: string,
     endpoint: string,
     statusCode: number,
-    responseBody: any
+    responseBody: unknown
   ): Promise<void> {
     if (!key) return;
 

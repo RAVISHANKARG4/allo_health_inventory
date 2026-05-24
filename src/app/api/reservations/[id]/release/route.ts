@@ -9,18 +9,18 @@ export async function POST(
   try {
     const reservation = await ReservationService.releaseReservation(id);
     return NextResponse.json({ reservation }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error releasing reservation ${id}:`, error);
 
     let status = 500;
     let code = 'SERVER_ERROR';
     let message = 'An unexpected error occurred.';
 
-    if (error.message === 'RESERVATION_NOT_FOUND') {
+    if (error instanceof Error && error.message === 'RESERVATION_NOT_FOUND') {
       status = 404;
       code = 'RESERVATION_NOT_FOUND';
       message = 'The specified reservation was not found.';
-    } else if (error.message === 'RESERVATION_ALREADY_CONFIRMED') {
+    } else if (error instanceof Error && error.message === 'RESERVATION_ALREADY_CONFIRMED') {
       status = 400;
       code = 'RESERVATION_ALREADY_CONFIRMED';
       message = 'This reservation has already been confirmed and cannot be released.';

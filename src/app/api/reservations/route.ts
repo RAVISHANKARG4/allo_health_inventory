@@ -63,18 +63,20 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(successResponse, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in POST /api/reservations:', error);
 
     let status = 500;
     let code = 'SERVER_ERROR';
     let message = 'An unexpected error occurred.';
 
-    if (error.message === 'INSUFFICIENT_STOCK') {
+    const errorMessage = error instanceof Error ? error.message : undefined;
+
+    if (errorMessage === 'INSUFFICIENT_STOCK') {
       status = 409;
       code = 'INSUFFICIENT_STOCK';
       message = 'Insufficient stock available to complete this reservation.';
-    } else if (error.message === 'INVENTORY_NOT_FOUND') {
+    } else if (errorMessage === 'INVENTORY_NOT_FOUND') {
       status = 404;
       code = 'INVENTORY_NOT_FOUND';
       message = 'The requested product-warehouse inventory record was not found.';
